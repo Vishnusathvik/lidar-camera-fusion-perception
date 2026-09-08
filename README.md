@@ -1,6 +1,3 @@
-Copy and paste the following directly into your `README.md`:
-
-````markdown
 # LiDAR–Camera Fusion for Depth-Enhanced Traffic Light Detection
 
 A ROS-based LiDAR–Camera fusion system for detecting traffic lights using a YOLO-based vision model and estimating their distance using 3D LiDAR point-cloud information.
@@ -25,41 +22,37 @@ The fusion system provides:
 
 ## System Pipeline
 
-```text
-                Camera Image
-                     |
-                     v
-              YOLO Detection
-                     |
-                     v
-          Traffic Light Bounding Box
-                     |
-                     |
-LiDAR Point Cloud   |
-        |            |
-        v            |
-LiDAR → Camera Projection
-        |
-        v
+Camera Image
+    |
+    v
+YOLO Detection
+    |
+    v
+Traffic Light Bounding Box
+    |
+    v
+LiDAR Point Cloud
+    |
+    v
+LiDAR to Camera Projection
+    |
+    v
 Projected LiDAR Points
-        |
-        +----------------+
-                         |
-                         v
-              Bounding Box Association
-                         |
-                         v
-                Near-Point Selection
-                         |
-                         v
-                3D Distance Estimation
-                         |
-                         v
-                 LiDAR–Camera Fusion
-                         |
-                         v
-              Traffic Light Decision
-````
+    |
+    v
+Bounding Box Association
+    |
+    v
+Near-Point Selection
+    |
+    v
+3D Distance Estimation
+    |
+    v
+LiDAR–Camera Fusion
+    |
+    v
+Traffic Light Decision
 
 ## LiDAR–Camera Calibration
 
@@ -73,24 +66,24 @@ The fusion pipeline performs the following steps:
 4. Remove projected points outside the image boundaries.
 5. Associate valid projected LiDAR points with YOLO detection bounding boxes.
 
-```text
+The projection process can be summarized as:
+
 LiDAR Point (X, Y, Z)
-        |
-        v
+    |
+    v
 Extrinsic Transformation
-        |
-        v
+    |
+    v
 Camera Coordinate Frame
-        |
-        v
+    |
+    v
 Camera Intrinsic Projection
-        |
-        v
+    |
+    v
 Image Pixel (u, v)
-        |
-        v
+    |
+    v
 YOLO Bounding Box Association
-```
 
 ## YOLO-Based Traffic Light Detection
 
@@ -98,10 +91,10 @@ A YOLO-based object detection model is used to detect traffic lights from the ca
 
 For each detected traffic light, the system extracts:
 
-* Bounding box coordinates
-* Object class
-* Projected LiDAR points inside the bounding box
-* LiDAR-based distance information
+- Bounding box coordinates
+- Object class
+- Projected LiDAR points inside the bounding box
+- LiDAR-based distance information
 
 The YOLO model is configured to use CUDA when a compatible GPU is available.
 
@@ -127,20 +120,18 @@ This provides a 3D LiDAR-based distance estimate for the camera-detected traffic
 
 For each detected traffic light, the system calculates:
 
-* Minimum LiDAR distance
-* Mean distance of selected LiDAR points
-* Standard deviation
-* LiDAR-associated distance
-* Difference between the estimated distances
+- Minimum LiDAR distance
+- Mean distance of selected LiDAR points
+- Standard deviation
+- LiDAR-associated distance
+- Difference between the estimated distances
 
 The detected traffic-light label and corresponding distance are published through ROS.
 
 Example:
 
-```text
-red: 8.4200
-green: 14.2100
-```
+    red: 8.4200
+    green: 14.2100
 
 ## Traffic Light Decision Making
 
@@ -148,143 +139,139 @@ The fused traffic-light information is used to generate a decision signal for au
 
 The current implementation uses a trigger distance of:
 
-```text
-10.5 m
-```
+    10.5 m
 
-When a red traffic light is detected within the trigger distance, the system publishes a `TRUE` decision.
+When a red traffic light is detected within the trigger distance, the system publishes a TRUE decision.
 
-When a green traffic light is detected, the system publishes a `FALSE` decision.
+When a green traffic light is detected, the system publishes a FALSE decision.
 
 A timeout mechanism is also implemented to reset the decision state when a relevant traffic-light detection is no longer observed.
 
-```text
+Decision logic:
+
 Traffic Light Detection
-          |
-          v
-    Distance Check
-          |
-     +----+----+
-     |         |
-     v         v
-  > 10.5 m   <= 10.5 m
-     |         |
-     |         v
-     |     Red Detected
-     |         |
-     |         v
-     |       TRUE
-     |
-     v
- Continue
+    |
+    v
+Distance Check
+    |
+    +----------------------+
+    |                      |
+    v                      v
+> 10.5 m                <= 10.5 m
+    |                      |
+    |                      v
+    |                 Red Detected
+    |                      |
+    |                      v
+    |                    TRUE
+    |
+    v
+Continue
 
 Green Detected
-      |
-      v
-    FALSE
-```
+    |
+    v
+FALSE
 
 ## ROS Architecture
 
 ### Subscribed Topics
 
-| Topic                               | Message Type              | Purpose                       |
-| ----------------------------------- | ------------------------- | ----------------------------- |
-| `/image_raw`                        | `sensor_msgs/Image`       | Camera image                  |
-| `/obstacle_detector/cloud_clusters` | `sensor_msgs/PointCloud2` | LiDAR point cloud             |
-| `/obstacle_detector/jsk_bboxes`     | `BoundingBoxArray`        | LiDAR/obstacle bounding boxes |
-| `/ndt_pose`                         | `PoseStamped`             | Vehicle localization pose     |
+| Topic | Message Type | Purpose |
+|---|---|---|
+| `/image_raw` | `sensor_msgs/Image` | Camera image |
+| `/obstacle_detector/cloud_clusters` | `sensor_msgs/PointCloud2` | LiDAR point cloud |
+| `/obstacle_detector/jsk_bboxes` | `BoundingBoxArray` | LiDAR/obstacle bounding boxes |
+| `/ndt_pose` | `PoseStamped` | Vehicle localization pose |
 
 ### Published Topics
 
-| Topic                          | Purpose                                             |
-| ------------------------------ | --------------------------------------------------- |
-| `/lidar_projection/image`      | LiDAR points projected onto camera image            |
-| `/classified_image/image`      | Image with detected traffic-light information       |
-| `/classified_lidar/pointcloud` | LiDAR points associated with detected objects       |
-| `/classified_lidar/labels`     | RViz visualization markers                          |
-| `/lcf_tl_distance`             | Detected traffic-light label and estimated distance |
-| `/lcf_tl_decision`             | Traffic-light decision state                        |
+| Topic | Purpose |
+|---|---|
+| `/lidar_projection/image` | LiDAR points projected onto camera image |
+| `/classified_image/image` | Image with detected traffic-light information |
+| `/classified_lidar/pointcloud` | LiDAR points associated with detected objects |
+| `/classified_lidar/labels` | RViz visualization markers |
+| `/lcf_tl_distance` | Detected traffic-light label and estimated distance |
+| `/lcf_tl_decision` | Traffic-light decision state |
 
 ## Visualization
 
 The system provides visualization of:
 
-* LiDAR points projected onto the camera image
-* YOLO detection bounding boxes
-* Traffic-light class labels
-* Estimated object distances
-* Classified LiDAR points
-* 3D labels in the LiDAR frame
+- LiDAR points projected onto the camera image
+- YOLO detection bounding boxes
+- Traffic-light class labels
+- Estimated object distances
+- Classified LiDAR points
+- 3D labels in the LiDAR frame
 
 The projected image can be published for camera-side visualization, while classified LiDAR points and object labels can be visualized in RViz.
 
 ## Key Features
 
-* Real-time ROS-based sensor fusion
-* LiDAR–Camera extrinsic calibration
-* 3D LiDAR to 2D image projection
-* YOLO-based traffic-light detection
-* LiDAR-based depth estimation
-* Camera–LiDAR object association
-* Adaptive nearest-point selection
-* Object-wise distance estimation
-* Classified LiDAR point-cloud generation
-* RViz visualization
-* Distance-based traffic-light decision making
-* Automatic decision timeout handling
+- Real-time ROS-based sensor fusion
+- LiDAR–Camera extrinsic calibration
+- 3D LiDAR to 2D image projection
+- YOLO-based traffic-light detection
+- LiDAR-based depth estimation
+- Camera–LiDAR object association
+- Adaptive nearest-point selection
+- Object-wise distance estimation
+- Classified LiDAR point-cloud generation
+- RViz visualization
+- Distance-based traffic-light decision making
+- Automatic decision timeout handling
 
 ## Technology
 
-* ROS
-* Python
-* OpenCV
-* PyTorch
-* Ultralytics YOLO
-* NumPy
-* Shapely
-* LiDAR
-* Camera
-* Point Cloud Processing
-* Sensor Fusion
-* Computer Vision
-* Autonomous Navigation
+- ROS
+- Python
+- OpenCV
+- PyTorch
+- Ultralytics YOLO
+- NumPy
+- Shapely
+- LiDAR
+- Camera
+- Point Cloud Processing
+- Sensor Fusion
+- Computer Vision
+- Autonomous Navigation
 
 ## Requirements
 
-* ROS
-* Python 3
-* OpenCV
-* PyTorch
-* Ultralytics
-* NumPy
-* Shapely
-* `sensor_msgs`
-* `cv_bridge`
-* `jsk_recognition_msgs`
-* `visualization_msgs`
+- ROS
+- Python 3
+- OpenCV
+- PyTorch
+- Ultralytics
+- NumPy
+- Shapely
+- sensor_msgs
+- cv_bridge
+- jsk_recognition_msgs
+- visualization_msgs
 
 ## Project Structure
 
-```text
-lidar-camera-fusion-traffic-light/
-│
-├── README.md
-│
-├── src/
-│   └── lcf_tl.py
-│
-├── weights/
-│   └── traffic_lights.pt
-│
-├── config/
-│   └── calibration.yaml
-│
-└── results/
-    └── visualization/
-```
+    lidar-camera-fusion-traffic-light/
+    |
+    +-- README.md
+    |
+    +-- src/
+    |   +-- lcf_tl.py
+    |
+    +-- weights/
+    |   +-- traffic_lights.pt
+    |
+    +-- config/
+    |   +-- calibration.yaml
+    |
+    +-- results/
+        +-- visualization/
 
-> The actual implementation and trained model weights are proprietary and are not included in this public repository.
+The actual implementation and trained model weights are proprietary and are not included in this public repository.
 
 ## Code Availability
 
@@ -294,11 +281,10 @@ This repository documents the LiDAR–Camera fusion architecture, perception pip
 
 ## Author
 
-**S. Sathvik**
+S. Sathvik
 
 Research Assistant
-TiHAN – Technology Innovation Hub for Autonomous Navigation
-IIT Hyderabad
 
-```
-```
+TiHAN – Technology Innovation Hub for Autonomous Navigation
+
+IIT Hyderabad
