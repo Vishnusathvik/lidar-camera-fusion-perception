@@ -1,4 +1,4 @@
-# LiDAR–Camera Fusion for Depth-Enhanced Traffic Light Detection
+# LiDAR–Camera Fusion for Depth-Enhanced Detection
 
 A ROS-based LiDAR–Camera fusion system for detecting traffic lights using a YOLO-based vision model and estimating their distance using 3D LiDAR point-cloud information.
 
@@ -15,81 +15,28 @@ The fusion system provides:
 - Traffic-light detection and classification
 - 3D distance estimation
 - LiDAR points associated with detected objects
-- Camera–LiDAR projection visualization
+- Camera–LiDAR projection
 - Classified LiDAR point-cloud generation
 - Traffic-light based decision making
-- RViz visualization for detected objects
-
-## System Pipeline
-
-Camera Image
-    |
-    v
-YOLO Detection
-    |
-    v
-Traffic Light Bounding Box
-    |
-    v
-LiDAR Point Cloud
-    |
-    v
-LiDAR to Camera Projection
-    |
-    v
-Projected LiDAR Points
-    |
-    v
-Bounding Box Association
-    |
-    v
-Near-Point Selection
-    |
-    v
-3D Distance Estimation
-    |
-    v
-LiDAR–Camera Fusion
-    |
-    v
-Traffic Light Decision
+- RViz visualization
 
 ## LiDAR–Camera Calibration
 
 The system uses calibrated camera intrinsic and LiDAR–camera extrinsic parameters to transform LiDAR points into the camera coordinate frame and project them onto the camera image.
 
-The fusion pipeline performs the following steps:
+The calibration process consists of:
 
-1. Transform LiDAR points into the camera coordinate frame using the extrinsic transformation.
-2. Project the transformed 3D points onto the camera image using the camera intrinsic matrix.
-3. Remove points behind the camera.
-4. Remove projected points outside the image boundaries.
-5. Associate valid projected LiDAR points with YOLO detection bounding boxes.
-
-The projection process can be summarized as:
-
-LiDAR Point (X, Y, Z)
-    |
-    v
-Extrinsic Transformation
-    |
-    v
-Camera Coordinate Frame
-    |
-    v
-Camera Intrinsic Projection
-    |
-    v
-Image Pixel (u, v)
-    |
-    v
-YOLO Bounding Box Association
+1. Transforming LiDAR points into the camera coordinate frame.
+2. Projecting the transformed 3D points onto the camera image.
+3. Filtering points behind the camera.
+4. Filtering projected points outside the image boundaries.
+5. Associating valid projected LiDAR points with YOLO detection bounding boxes.
 
 ## YOLO-Based Traffic Light Detection
 
 A YOLO-based object detection model is used to detect traffic lights from the camera image.
 
-For each detected traffic light, the system extracts:
+For each detected traffic light, the system obtains:
 
 - Bounding box coordinates
 - Object class
@@ -100,19 +47,19 @@ The YOLO model is configured to use CUDA when a compatible GPU is available.
 
 ## LiDAR Depth Association
 
-After projecting the LiDAR point cloud onto the camera image, the system identifies LiDAR points that fall inside each detected traffic-light bounding box.
+After projecting the LiDAR point cloud onto the camera image, LiDAR points falling inside each detected traffic-light bounding box are selected.
 
-An adaptive filtering approach is used to select the points corresponding to the nearest part of the detected object.
+An adaptive filtering approach is used to identify points corresponding to the nearest part of the detected object.
 
-The process is:
+The process includes:
 
-1. Collect LiDAR points inside the detection bounding box.
-2. Calculate the Euclidean distance of each point.
-3. Find the minimum distance.
-4. Select points within 5% of the minimum distance.
-5. If fewer than three points are available, select up to the five closest points.
-6. Calculate the centroid of the selected points.
-7. Use the selected points for depth and spatial estimation.
+1. Collecting LiDAR points inside the detection bounding box.
+2. Calculating the Euclidean distance of each point.
+3. Finding the minimum distance.
+4. Selecting points within 5% of the minimum distance.
+5. Selecting up to the five closest points when insufficient points are available.
+6. Calculating the centroid of the selected points.
+7. Using the selected points for depth and spatial estimation.
 
 This provides a 3D LiDAR-based distance estimate for the camera-detected traffic light.
 
@@ -123,8 +70,8 @@ For each detected traffic light, the system calculates:
 - Minimum LiDAR distance
 - Mean distance of selected LiDAR points
 - Standard deviation
-- LiDAR-associated distance
-- Difference between the estimated distances
+- Associated LiDAR distance
+- Difference between estimated distances
 
 The detected traffic-light label and corresponding distance are published through ROS.
 
@@ -146,32 +93,6 @@ When a red traffic light is detected within the trigger distance, the system pub
 When a green traffic light is detected, the system publishes a FALSE decision.
 
 A timeout mechanism is also implemented to reset the decision state when a relevant traffic-light detection is no longer observed.
-
-Decision logic:
-
-Traffic Light Detection
-    |
-    v
-Distance Check
-    |
-    +----------------------+
-    |                      |
-    v                      v
-> 10.5 m                <= 10.5 m
-    |                      |
-    |                      v
-    |                 Red Detected
-    |                      |
-    |                      v
-    |                    TRUE
-    |
-    v
-Continue
-
-Green Detected
-    |
-    v
-FALSE
 
 ## ROS Architecture
 
@@ -256,22 +177,11 @@ The projected image can be published for camera-side visualization, while classi
 ## Project Structure
 
     lidar-camera-fusion-traffic-light/
-    |
-    +-- README.md
-    |
-    +-- src/
-    |   +-- lcf_tl.py
-    |
-    +-- weights/
-    |   +-- traffic_lights.pt
-    |
-    +-- config/
-    |   +-- calibration.yaml
-    |
-    +-- results/
-        +-- visualization/
+    ├── README.md
+    ├── documentation/
+    └── results/
 
-The actual implementation and trained model weights are proprietary and are not included in this public repository.
+The actual implementation, calibration parameters, and trained model weights are proprietary and are not included in this public repository.
 
 ## Code Availability
 
